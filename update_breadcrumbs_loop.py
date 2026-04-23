@@ -6,6 +6,11 @@ import subprocess
 import os
 
 # ======================
+# FORCE CORRECT DIRECTORY
+# ======================
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# ======================
 # CONFIG
 # ======================
 UPDATE_INTERVAL = 300
@@ -74,25 +79,44 @@ def read_position():
 # GIT PUSH
 # ======================
 def push_to_git():
-    subprocess.run(["git", "add", "-A"])
+    try:
+        subprocess.run(["git", "add", "-A"])
 
-    commit = subprocess.run(
-        ["git", "commit", "-m", "🛰️ Tracker update"],
-        capture_output=True,
-        text=True
-    )
+        commit = subprocess.run(
+            ["git", "commit", "-m", "Tracker update"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore"
+        )
 
-    if "nothing to commit" in commit.stdout.lower():
-        return
+        if not commit.stdout:
+            print("⚠️ Commit failed or no output")
+            return
 
-    subprocess.run(["git", "push", "--force"])
-    print("📤 Pushed to GitHub")
+        if "nothing to commit" in commit.stdout.lower():
+            print("⚠️ No changes to commit")
+            return
+
+        push = subprocess.run(
+            ["git", "push"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore"
+        )
+
+        print(push.stdout)
+        print("📤 Pushed to GitHub")
+
+    except Exception as e:
+        print("❌ Git error:", e)
 
 # ======================
 # MAIN LOOP
 # ======================
 if __name__ == "__main__":
-    print("🚀 Single Vessel Tracker")
+    print("🚀 Single Vessel Tracker Running")
 
     while True:
         lat, lon, sog, hdg = read_position()
